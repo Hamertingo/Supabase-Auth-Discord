@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import supabase from '@/lib/supabase/supabase'
+import supabaseAdmin from '@/lib/supabase/supabaseAdmin'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -37,6 +39,21 @@ export async function GET(request: Request) {
 
     try {
       await supabase.auth.exchangeCodeForSession(code)
+
+      const { data: session } = await supabase.auth.getSession()
+      const { data: user } = await supabase.auth.getUser()
+      
+      const { data, error } = await supabaseAdmin.from('users').upsert([
+        {
+          id: user.user?.id, 
+          username: user.user?.user_metadata?.full_name || user.user?.email,
+          email: user.user?.email, 
+          avatar_url: user.user?.user_metadata?.avatar_url, 
+          acessToken: session?.session?.provider_token, 
+          refreshToken: session?.session?.refresh_token 
+        },
+      ])
+
       return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
     } catch (error) {
       console.error('Auth error:', error)
