@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       const { data: session } = await supabase.auth.getSession()
       const { data: user } = await supabase.auth.getUser()
       
-      const { data, error } = await supabaseAdmin.from('users').insert([
+      const { data, error } = await supabaseAdmin.from('users').upsert([
         {
           id: user.user?.id, 
           username: user.user?.user_metadata?.full_name || user.user?.email,
